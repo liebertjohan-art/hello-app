@@ -1,0 +1,49 @@
+name: Flutter Build & Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Create Release and Upload APK
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="v1.0.${{ github.run_number }}"
+          echo "Creating release $TAG_NAME"
+          gh release create "$TAG_NAME" \
+            build/app/outputs/flutter-apk/app-release.apk \
+            --title "Release $TAG_NAME" \
+            --notes "Automated Flutter APK Build from GitHub Actions (Run #${{ github.run_number }})"
