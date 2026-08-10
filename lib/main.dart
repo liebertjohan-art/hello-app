@@ -11,17 +11,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Cyber TicTacToe',
+      title: 'CyberTae',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0B0E17),
+        scaffoldBackgroundColor: const Color(0xFF050505),
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFF00F2FE),
-          secondary: Color(0xFFFF007A),
-          surface: Color(0xFF151928),
-          background: Color(0xFF0B0E17),
-          onPrimary: Color(0xFF0B0E17),
+          secondary: Color(0xFF00E676), // Emerald secondary
+          surface: Color(0xFF0A0C10),
+          background: Color(0xFF050505),
+          onPrimary: Color(0xFF050505),
           onSecondary: Colors.white,
           onSurface: Colors.white,
         ),
