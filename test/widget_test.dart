@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:hello_app/main.dart';
-import 'package:hello_app/models/game_state.dart';
-import 'package:hello_app/ai/minimax.dart';
-import 'package:hello_app/screens/game_screen.dart';
+import 'package:cybertactoe/main.dart';
+import 'package:cybertactoe/models/game_state.dart';
+import 'package:cybertactoe/ai/minimax.dart';
+import 'package:cybertactoe/screens/game_screen.dart';
 
 void main() {
   group('App Launch', () {
