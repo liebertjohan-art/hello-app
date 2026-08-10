@@ -96,22 +96,20 @@ class _CellWidgetState extends State<CellWidget>
       child: Container(
         decoration: BoxDecoration(
           color: widget.isWinningCell
-              ? highlightColor.withOpacity(0.1)
+              ? highlightColor.withOpacity(0.15)
               : Colors.transparent,
           border: border,
+          boxShadow: widget.isWinningCell ? [
+            BoxShadow(
+              color: highlightColor.withOpacity(0.2),
+              blurRadius: 20,
+              spreadRadius: 2,
+            )
+          ] : [],
         ),
         child: Stack(
           alignment: Alignment.center,
           children: [
-            if (widget.isWinningCell)
-              Positioned.fill(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                  child: Container(
-                    color: Colors.transparent,
-                  ),
-                ),
-              ),
             Material(
               color: Colors.transparent,
               child: InkWell(

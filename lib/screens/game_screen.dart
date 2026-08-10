@@ -4,7 +4,6 @@ import '../models/ai_difficulty.dart';
 import '../ai/minimax.dart';
 import '../widgets/board_widget.dart';
 import '../widgets/score_board.dart';
-import '../widgets/heart_footer_widget.dart';
 import '../widgets/confetti_widget.dart';
 import '../widgets/history_sheet_widget.dart';
 import '../widgets/tactile_button.dart';
@@ -79,7 +78,7 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  void _resetGame() {
+  void _nextRound() {
     setState(() {
       _isAIThinking = false;
       _showConfetti = false;
@@ -87,7 +86,7 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  void _newGame() {
+  void _resetScores() {
     setState(() {
       _isAIThinking = false;
       _showConfetti = false;
@@ -225,7 +224,7 @@ class _GameScreenState extends State<GameScreen> {
                     children: [
                       Expanded(
                         child: TactileButton(
-                          onTap: _resetGame,
+                          onTap: _resetScores,
                           child: Container(
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.03),
@@ -242,14 +241,14 @@ class _GameScreenState extends State<GameScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.refresh_rounded, size: 16, color: Colors.white.withOpacity(0.7)),
+                                  Icon(Icons.restart_alt_rounded, size: 16, color: Colors.white.withOpacity(0.7)),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'RESET BOARD',
+                                    'RESET SCORES',
                                     style: TextStyle(
                                       fontFamily: 'monospace',
                                       color: Colors.white.withOpacity(0.7),
-                                      fontSize: 11,
+                                      fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 1.0,
                                     ),
@@ -263,7 +262,7 @@ class _GameScreenState extends State<GameScreen> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: TactileButton(
-                          onTap: _newGame,
+                          onTap: _nextRound,
                           child: Container(
                             decoration: BoxDecoration(
                               color: const Color(0xFF00F2FE).withOpacity(0.15),
@@ -280,10 +279,10 @@ class _GameScreenState extends State<GameScreen> {
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.play_arrow_rounded, size: 18, color: Color(0xFF00F2FE)),
+                                  Icon(Icons.fast_forward_rounded, size: 16, color: Color(0xFF00F2FE)),
                                   SizedBox(width: 8),
                                   Text(
-                                    'NEW MATCH',
+                                    'NEXT ROUND',
                                     style: TextStyle(
                                       fontFamily: 'monospace',
                                       color: Color(0xFF00F2FE),
@@ -301,8 +300,6 @@ class _GameScreenState extends State<GameScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
-                  const HeartFooterWidget(),
                 ],
               ),
             ),

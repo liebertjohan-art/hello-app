@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/game_state.dart';
 import '../models/ai_difficulty.dart';
-import '../widgets/heart_footer_widget.dart';
+import '../widgets/credits_sheet_widget.dart';
 import '../widgets/history_sheet_widget.dart';
 import '../widgets/tactile_button.dart';
 import 'game_screen.dart';
@@ -138,8 +138,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
 
-              const SizedBox(height: 24),
-              _buildStaggeredItem(3, const HeartFooterWidget()),
+              const SizedBox(height: 12),
             ],
           ),
         ),
@@ -179,38 +178,55 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
         
-        ListenableBuilder(
-          listenable: _sharedGameState,
-          builder: (context, _) {
-            final historyCount = _sharedGameState.totalGames;
-            return TactileButton(
-              onTap: () => HistorySheetWidget.show(context, _sharedGameState),
+        Row(
+          children: [
+            TactileButton(
+              onTap: () => CreditsSheetWidget.show(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.03),
-                  borderRadius: BorderRadius.circular(100),
+                  shape: BoxShape.circle,
                   border: Border.all(color: Colors.white.withOpacity(0.1)),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.history, size: 16, color: Colors.white70),
-                    const SizedBox(width: 8),
-                    Text(
-                      historyCount > 0 ? 'HISTORY ($historyCount)' : 'HISTORY',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
+                child: const Icon(Icons.fingerprint_rounded, size: 18, color: Colors.white70),
               ),
-            );
-          },
+            ),
+            const SizedBox(width: 12),
+            ListenableBuilder(
+              listenable: _sharedGameState,
+              builder: (context, _) {
+                final historyCount = _sharedGameState.totalGames;
+                return TactileButton(
+                  onTap: () => HistorySheetWidget.show(context, _sharedGameState),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.03),
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.history, size: 16, color: Colors.white70),
+                        const SizedBox(width: 8),
+                        Text(
+                          historyCount > 0 ? 'HISTORY ($historyCount)' : 'HISTORY',
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ],
     );

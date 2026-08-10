@@ -45,12 +45,21 @@ class BoardWidget extends StatelessWidget {
           ),
           itemCount: 9,
           itemBuilder: (context, index) {
-            return CellWidget(
-              player: board[index],
-              isWinningCell: winningCells.contains(index),
-              onTap: () => onTap(index),
-              enabled: enabled,
-              index: index,
+            final hasWinner = winningCells.isNotEmpty;
+            final isWinningCell = winningCells.contains(index);
+            final dimCell = hasWinner && !isWinningCell;
+
+            return AnimatedOpacity(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutCubic,
+              opacity: dimCell ? 0.15 : 1.0,
+              child: CellWidget(
+                player: board[index],
+                isWinningCell: isWinningCell,
+                onTap: () => onTap(index),
+                enabled: enabled,
+                index: index,
+              ),
             );
           },
         ),
