@@ -14,7 +14,17 @@ class MyApp extends StatelessWidget {
       title: 'Tic Tac Toe',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF0B0E17),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF00F2FE),
+          secondary: Color(0xFFFF007A),
+          surface: Color(0xFF151928),
+          background: Color(0xFF0B0E17),
+          onPrimary: Color(0xFF0B0E17),
+          onSecondary: Colors.white,
+          onSurface: Colors.white,
+        ),
         useMaterial3: true,
       ),
       home: const HomeScreen(),

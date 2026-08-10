@@ -31,7 +31,7 @@ class _CellWidgetState extends State<CellWidget>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 450),
     );
     _scaleAnimation = CurvedAnimation(
       parent: _controller,
@@ -63,20 +63,21 @@ class _CellWidgetState extends State<CellWidget>
   @override
   Widget build(BuildContext context) {
     final bool canTap = widget.enabled && widget.player == Player.none;
-    final theme = Theme.of(context);
 
     final Border border = Border(
       right: (widget.index % 3 != 2)
-          ? BorderSide(color: theme.dividerColor.withOpacity(0.3), width: 1.5)
+          ? BorderSide(color: Colors.white.withOpacity(0.08), width: 1.5)
           : BorderSide.none,
       bottom: (widget.index < 6)
-          ? BorderSide(color: theme.dividerColor.withOpacity(0.3), width: 1.5)
+          ? BorderSide(color: Colors.white.withOpacity(0.08), width: 1.5)
           : BorderSide.none,
     );
 
     final Color backgroundColor = widget.isWinningCell
-        ? theme.colorScheme.primary.withOpacity(0.2)
-        : theme.colorScheme.surface;
+        ? (widget.player == Player.x
+            ? const Color(0xFF00F2FE).withOpacity(0.22)
+            : const Color(0xFFFF007A).withOpacity(0.22))
+        : const Color(0xFF151928);
 
     return GestureDetector(
       onTap: canTap ? widget.onTap : null,
@@ -90,8 +91,8 @@ class _CellWidgetState extends State<CellWidget>
           color: Colors.transparent,
           child: InkWell(
             onTap: canTap ? widget.onTap : null,
-            splashColor: theme.colorScheme.primary.withOpacity(0.1),
-            highlightColor: theme.colorScheme.primary.withOpacity(0.05),
+            splashColor: const Color(0xFF00F2FE).withOpacity(0.15),
+            highlightColor: const Color(0xFFFF007A).withOpacity(0.1),
             child: Center(
               child: ScaleTransition(
                 scale: _scaleAnimation,
@@ -110,17 +111,11 @@ class _CellWidgetState extends State<CellWidget>
     switch (widget.player) {
       case Player.x:
         return const CustomPaint(
-          painter: _XPainter(
-            color: Colors.deepPurple,
-            strokeWidth: 6.0,
-          ),
+          painter: _XNeonPainter(),
         );
       case Player.o:
         return const CustomPaint(
-          painter: _OPainter(
-            color: Colors.teal,
-            strokeWidth: 6.0,
-          ),
+          painter: _ONeonPainter(),
         );
       case Player.none:
         return const SizedBox.shrink();
@@ -128,69 +123,76 @@ class _CellWidgetState extends State<CellWidget>
   }
 }
 
-class _XPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-
-  const _XPainter({
-    required this.color,
-    this.strokeWidth = 6.0,
-  });
+class _XNeonPainter extends CustomPainter {
+  const _XNeonPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
+    const color = Color(0xFF00F2FE);
+    final strokeWidth = size.width * 0.09;
+    final padding = size.width * 0.22;
+
+    final glowPaint = Paint()
+      ..color = color.withOpacity(0.5)
+      ..strokeWidth = strokeWidth * 1.6
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    final mainPaint = Paint()
       ..color = color
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    final padding = size.width * 0.20;
+    final p1 = Offset(padding, padding);
+    final p2 = Offset(size.width - padding, size.height - padding);
+    final p3 = Offset(size.width - padding, padding);
+    final p4 = Offset(padding, size.height - padding);
 
-    canvas.drawLine(
-      Offset(padding, padding),
-      Offset(size.width - padding, size.height - padding),
-      paint,
-    );
+    // Draw glow pass
+    canvas.drawLine(p1, p2, glowPaint);
+    canvas.drawLine(p3, p4, glowPaint);
 
-    canvas.drawLine(
-      Offset(size.width - padding, padding),
-      Offset(padding, size.height - padding),
-      paint,
-    );
+    // Draw crisp neon stroke pass
+    canvas.drawLine(p1, p2, mainPaint);
+    canvas.drawLine(p3, p4, mainPaint);
   }
 
   @override
-  bool shouldRepaint(covariant _XPainter oldDelegate) {
-    return oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _OPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-
-  const _OPainter({
-    required this.color,
-    this.strokeWidth = 6.0,
-  });
+class _ONeonPainter extends CustomPainter {
+  const _ONeonPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
+    const color = Color(0xFFFF007A);
+    final strokeWidth = size.width * 0.09;
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width * 0.28;
+
+    final glowPaint = Paint()
+      ..color = color.withOpacity(0.5)
+      ..strokeWidth = strokeWidth * 1.6
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    final mainPaint = Paint()
       ..color = color
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width * 0.35;
+    // Draw glow pass
+    canvas.drawCircle(center, radius, glowPaint);
 
-    canvas.drawCircle(center, radius, paint);
+    // Draw crisp neon stroke pass
+    canvas.drawCircle(center, radius, mainPaint);
   }
 
   @override
-  bool shouldRepaint(covariant _OPainter oldDelegate) {
-    return oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

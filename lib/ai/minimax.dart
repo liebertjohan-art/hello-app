@@ -1,11 +1,44 @@
+import 'dart:math';
 import '../models/game_state.dart';
+import '../models/ai_difficulty.dart';
 
 class MinimaxAI {
   final Player aiPlayer = Player.o;
   final Player humanPlayer = Player.x;
+  final Random _random = Random();
+
+  int getMove(List<Player> board, AIDifficulty difficulty) {
+    final available = <int>[];
+    for (int i = 0; i < board.length; i++) {
+      if (board[i] == Player.none) {
+        available.add(i);
+      }
+    }
+
+    if (available.isEmpty) return -1;
+
+    switch (difficulty) {
+      case AIDifficulty.easy:
+        // 70% chance random move, 30% best move
+        if (_random.nextDouble() < 0.7) {
+          return available[_random.nextInt(available.length)];
+        }
+        return getBestMove(board);
+
+      case AIDifficulty.medium:
+        // 40% chance random move, 60% best move
+        if (_random.nextDouble() < 0.4) {
+          return available[_random.nextInt(available.length)];
+        }
+        return getBestMove(board);
+
+      case AIDifficulty.hard:
+        // 100% best move
+        return getBestMove(board);
+    }
+  }
 
   int getBestMove(List<Player> board) {
-    // Try center first if available (optimization)
     final availableMoves = <int>[];
     if (board[4] == Player.none) {
       availableMoves.add(4);
@@ -44,10 +77,6 @@ class MinimaxAI {
 
   int _minimax(
       List<Player> board, bool isMaximizing, int depth, int alpha, int beta) {
-    // Check terminal states:
-    // - AI wins: return 10 - depth (prefer faster wins)
-    // - Human wins: return depth - 10 (prefer slower losses)
-    // - Draw: return 0
     final winner = _checkWinner(board);
     if (winner == aiPlayer) {
       return 10 - depth;
@@ -59,7 +88,6 @@ class MinimaxAI {
       return 0;
     }
 
-    // Recursive minimax with alpha-beta pruning
     if (isMaximizing) {
       int maxScore = -1000;
       for (int i = 0; i < board.length; i++) {
@@ -103,14 +131,9 @@ class MinimaxAI {
 
   Player? _checkWinner(List<Player> board) {
     const winLines = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6],
     ];
 
     for (final line in winLines) {
