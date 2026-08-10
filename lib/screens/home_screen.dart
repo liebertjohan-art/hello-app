@@ -231,6 +231,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           width: double.infinity,
           decoration: BoxDecoration(
             color: const Color(0xFF0A0C10),
+            image: const DecorationImage(
+              image: AssetImage('assets/images/ai_card.jpg'),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                Colors.black54,
+                BlendMode.darken,
+              ),
+            ),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(color: const Color(0xFF00F2FE).withOpacity(0.3), width: 1),
             boxShadow: [
@@ -304,6 +312,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           width: double.infinity,
           decoration: BoxDecoration(
             color: const Color(0xFF0A0C10),
+            image: const DecorationImage(
+              image: AssetImage('assets/images/pvp_card.jpg'),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                Colors.black54,
+                BlendMode.darken,
+              ),
+            ),
             borderRadius: BorderRadius.circular(30),
           ),
           padding: const EdgeInsets.all(24),
