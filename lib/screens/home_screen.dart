@@ -185,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 'TIC TAC TOE',
                                 style: TextStyle(
                                   fontSize: 34,
-                                  fontWeight: FontWeight.black,
+                                  fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                   letterSpacing: 2.0,
                                 ),

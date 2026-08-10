@@ -292,7 +292,7 @@ class _GameScreenState extends State<GameScreen> {
                           ),
                           onPressed: _newGame,
                           icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                          label: const Text('New Game', style: TextStyle(fontWeight: FontWeight.black)),
+                          label: const Text('New Game', style: TextStyle(fontWeight: FontWeight.w900)),
                         ),
                       ),
                     ],
