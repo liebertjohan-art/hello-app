@@ -1,7 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/game_state.dart';
 import '../models/game_record.dart';
 import '../models/ai_difficulty.dart';
+import 'tactile_button.dart';
 
 class HistorySheetWidget extends StatefulWidget {
   final GameState gameState;
@@ -15,10 +17,9 @@ class HistorySheetWidget extends StatefulWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF151928),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      barrierColor: Colors.black.withOpacity(0.4),
       builder: (context) => HistorySheetWidget(gameState: gameState),
     );
   }
@@ -28,7 +29,7 @@ class HistorySheetWidget extends StatefulWidget {
 }
 
 class _HistorySheetWidgetState extends State<HistorySheetWidget> {
-  int _selectedFilterIndex = 0; // 0: All, 1: vs AI, 2: 2 Players
+  int _selectedFilterIndex = 0;
 
   List<GameRecord> get _filteredHistory {
     final history = widget.gameState.gameHistory;
@@ -42,7 +43,6 @@ class _HistorySheetWidgetState extends State<HistorySheetWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final history = _filteredHistory;
     final total = widget.gameState.totalGames;
     final xWins = widget.gameState.xWinCount;
@@ -51,203 +51,216 @@ class _HistorySheetWidgetState extends State<HistorySheetWidget> {
 
     final double winRate = total > 0 ? ((xWins / total) * 100) : 0;
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.75,
-      minChildSize: 0.4,
-      maxChildSize: 0.92,
-      expand: false,
-      builder: (context, scrollController) {
-        return Column(
-          children: [
-            // Sheet Handle bar
-            const SizedBox(height: 12),
-            Container(
-              width: 44,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(2),
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) {
+          return Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF050505).withOpacity(0.75),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
+              border: Border(
+                top: BorderSide(color: Colors.white.withOpacity(0.15), width: 1.5),
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Header Title & Clear Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 48,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF00F2FE).withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.history_rounded,
-                          color: Color(0xFF00F2FE),
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Game History',
-                        style: theme.textTheme.titleLarge?.copyWith(
+                      const Text(
+                        'COMBAT LOG',
+                        style: TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.0,
                         ),
                       ),
+                      if (widget.gameState.gameHistory.isNotEmpty)
+                        TactileButton(
+                          onTap: () => _confirmClear(context),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFF007A).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFFF007A).withOpacity(0.3)),
+                            ),
+                            child: const Text(
+                              'PURGE',
+                              style: TextStyle(
+                                fontFamily: 'monospace',
+                                color: Color(0xFFFF007A),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
-                  if (widget.gameState.gameHistory.isNotEmpty)
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Color(0xFF8E9AAF)),
-                      tooltip: 'Clear History',
-                      onPressed: () => _confirmClear(context),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Stats summary card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0B0E17),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Colors.white.withOpacity(0.08)),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatPill('Matches', '$total', Colors.white),
-                    _buildStatPill('X Wins', '$xWins', const Color(0xFF00F2FE)),
-                    _buildStatPill('O Wins', '$oWins', const Color(0xFFFF007A)),
-                    _buildStatPill('Draws', '$draws', const Color(0xFFFFD700)),
-                    _buildStatPill('Win Rate', '${winRate.toStringAsFixed(0)}%', const Color(0xFF7000FF)),
-                  ],
+                const SizedBox(height: 24),
+
+                SizedBox(
+                  height: 70,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    children: [
+                      _buildStatPill('TOTAL MATCHES', '$total', Colors.white),
+                      const SizedBox(width: 12),
+                      _buildStatPill('X VICTORIES', '$xWins', const Color(0xFF00F2FE)),
+                      const SizedBox(width: 12),
+                      _buildStatPill('O VICTORIES', '$oWins', const Color(0xFFFF007A)),
+                      const SizedBox(width: 12),
+                      _buildStatPill('STALEMATES', '$draws', const Color(0xFFFFD700)),
+                      const SizedBox(width: 12),
+                      _buildStatPill('WIN RATE', '${winRate.toStringAsFixed(0)}%', const Color(0xFF00E676)),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
-            // Filter Tabs Row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
-                children: [
-                  _buildFilterChip(0, 'All'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(1, 'vs AI'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(2, '2 Players'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Row(
+                    children: [
+                      _buildFilterChip(0, 'GLOBAL'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(1, 'NEURAL NET'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(2, 'LOCAL PVP'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
 
-            // History List or Empty state
-            Expanded(
-              child: history.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.sports_esports_outlined,
-                            size: 56,
-                            color: Colors.white.withOpacity(0.2),
+                Expanded(
+                  child: history.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.data_array_rounded,
+                                size: 48,
+                                color: Colors.white.withOpacity(0.1),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'NO LOGS DETECTED',
+                                style: TextStyle(
+                                  fontFamily: 'monospace',
+                                  color: Colors.white.withOpacity(0.3),
+                                  fontSize: 12,
+                                  letterSpacing: 2.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No matches recorded yet!',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Play a match to see your game history here.',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.3),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      controller: scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                      itemCount: history.length,
-                      itemBuilder: (context, index) {
-                        final record = history[index];
-                        return _buildRecordCard(context, record);
-                      },
-                    ),
+                        )
+                      : ListView.builder(
+                          controller: scrollController,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                          itemCount: history.length,
+                          itemBuilder: (context, index) {
+                            return _buildRecordCard(context, history[index]);
+                          },
+                        ),
+                ),
+              ],
             ),
-          ],
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
   Widget _buildStatPill(String label, String value, Color color) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            color: color,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              height: 1.0,
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF8E9AAF),
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'monospace',
+              color: Colors.white.withOpacity(0.5),
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.0,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildFilterChip(int index, String label) {
     final isSelected = _selectedFilterIndex == index;
-    return GestureDetector(
+    return TactileButton(
       onTap: () => setState(() => _selectedFilterIndex = index),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF00F2FE).withOpacity(0.2)
-              : const Color(0xFF0B0E17),
-          borderRadius: BorderRadius.circular(20),
+              ? Colors.white.withOpacity(0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF00F2FE)
-                : Colors.white.withOpacity(0.08),
-            width: 1,
+                ? Colors.white.withOpacity(0.3)
+                : Colors.white.withOpacity(0.05),
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? const Color(0xFF00F2FE) : const Color(0xFF8E9AAF),
-            fontSize: 12,
+            fontFamily: 'monospace',
+            color: isSelected ? Colors.white : Colors.white.withOpacity(0.4),
+            fontSize: 9,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            letterSpacing: 1.0,
           ),
         ),
       ),
@@ -257,103 +270,126 @@ class _HistorySheetWidgetState extends State<HistorySheetWidget> {
   Widget _buildRecordCard(BuildContext context, GameRecord record) {
     Color resultColor;
     String resultText;
-    IconData resultIcon;
 
     if (record.result == GameResult.xWins) {
       resultColor = const Color(0xFF00F2FE);
-      resultText = '${record.winnerLabel} Won';
-      resultIcon = Icons.emoji_events_rounded;
+      resultText = 'X VICTORY';
     } else if (record.result == GameResult.oWins) {
       resultColor = const Color(0xFFFF007A);
-      resultText = '${record.winnerLabel} Won';
-      resultIcon = Icons.emoji_events_rounded;
+      resultText = 'O VICTORY';
     } else {
       resultColor = const Color(0xFFFFD700);
-      resultText = 'Draw';
-      resultIcon = Icons.handshake_outlined;
+      resultText = 'STALEMATE';
     }
 
-    final modeBadgeText = record.mode == GameMode.vsAI ? 'vs AI' : '2 Players';
+    final modeBadgeText = record.mode == GameMode.vsAI ? 'NEURAL NET' : 'LOCAL PVP';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0B0E17),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withOpacity(0.02),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: resultColor.withOpacity(0.25),
+          color: resultColor.withOpacity(0.15),
           width: 1,
         ),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            width: 4,
+            height: 36,
             decoration: BoxDecoration(
-              color: resultColor.withOpacity(0.15),
-              shape: BoxShape.circle,
+              color: resultColor,
+              borderRadius: BorderRadius.circular(2),
+              boxShadow: [
+                BoxShadow(
+                  color: resultColor.withOpacity(0.5),
+                  blurRadius: 8,
+                )
+              ]
             ),
-            child: Icon(resultIcon, color: resultColor, size: 20),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       resultText,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: resultColor,
                         fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    Text(
+                      '${record.formattedDate} // ${record.formattedTime}',
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        color: Colors.white.withOpacity(0.3),
+                        fontSize: 9,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.08),
+                        color: Colors.white.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         modeBadgeText,
                         style: const TextStyle(
-                          color: Color(0xFF8E9AAF),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
+                          fontFamily: 'monospace',
+                          color: Colors.white70,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
                         ),
                       ),
                     ),
                     if (record.difficulty != null) ...[
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: record.difficulty!.color.withOpacity(0.2),
+                          color: record.difficulty!.color.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          record.difficulty!.label,
+                          record.difficulty!.label.toUpperCase(),
                           style: TextStyle(
+                            fontFamily: 'monospace',
                             color: record.difficulty!.color,
-                            fontSize: 10,
+                            fontSize: 8,
                             fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
                           ),
                         ),
                       ),
                     ],
+                    const Spacer(),
+                    Text(
+                      '${record.movesCount} MOVES',
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        color: Colors.white.withOpacity(0.5),
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${record.movesCount} moves • ${record.formattedDate} at ${record.formattedTime}',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
-                    fontSize: 11,
-                  ),
                 ),
               ],
             ),
@@ -367,28 +403,58 @@ class _HistorySheetWidgetState extends State<HistorySheetWidget> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFF151928),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Clear History?', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'This will delete all saved match records and statistics.',
-          style: TextStyle(color: Color(0xFF8E9AAF)),
+        backgroundColor: const Color(0xFF0A0C10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: Colors.white.withOpacity(0.1)),
+        ),
+        title: const Text(
+          'PURGE LOGS?',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        content: Text(
+          'This action is irreversible. All combat data will be permanently deleted.',
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.6),
+            fontSize: 14,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF8E9AAF))),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFFF007A),
+            child: Text(
+              'CANCEL',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                color: Colors.white.withOpacity(0.5),
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            onPressed: () {
+          ),
+          TactileButton(
+            onTap: () {
               widget.gameState.clearHistory();
               Navigator.pop(dialogContext);
               setState(() {});
             },
-            child: const Text('Clear All'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF007A),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'CONFIRM PURGE',
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
         ],
       ),

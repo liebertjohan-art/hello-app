@@ -7,6 +7,7 @@ import '../widgets/score_board.dart';
 import '../widgets/heart_footer_widget.dart';
 import '../widgets/confetti_widget.dart';
 import '../widgets/history_sheet_widget.dart';
+import '../widgets/tactile_button.dart';
 
 class GameScreen extends StatefulWidget {
   final GameMode mode;
@@ -97,18 +98,18 @@ class _GameScreenState extends State<GameScreen> {
   String _getStatusText() {
     switch (_gameState.result) {
       case GameResult.xWins:
-        return widget.mode == GameMode.vsAI ? '🎉 You Win!' : '🎉 Player X Wins!';
+        return widget.mode == GameMode.vsAI ? 'YOU WON THE MATCH' : 'PLAYER X SECURED VICTORY';
       case GameResult.oWins:
-        return widget.mode == GameMode.vsAI ? '🤖 AI Bot Wins!' : '🎉 Player O Wins!';
+        return widget.mode == GameMode.vsAI ? 'AI OVERRIDE SUCCESSFUL' : 'PLAYER O SECURED VICTORY';
       case GameResult.draw:
-        return "🤝 It's a Draw!";
+        return 'STALEMATE DETECTED';
       case GameResult.ongoing:
         if (_isAIThinking) {
-          return '🤖 AI is thinking...';
+          return 'NEURAL NET CALCULATING...';
         }
         return _gameState.currentPlayer == Player.x
-            ? (widget.mode == GameMode.vsAI ? "Your Turn (X)" : "Player X's Turn")
-            : (widget.mode == GameMode.vsAI ? "AI's Turn (O)" : "Player O's Turn");
+            ? (widget.mode == GameMode.vsAI ? "AWAITING YOUR INPUT" : "AWAITING PLAYER X")
+            : (widget.mode == GameMode.vsAI ? "AWAITING AI INPUT" : "AWAITING PLAYER O");
     }
   }
 
@@ -132,107 +133,68 @@ class _GameScreenState extends State<GameScreen> {
     final statusText = _getStatusText();
     final statusColor = _getStatusColor();
     final isGameOver = _gameState.result != GameResult.ongoing;
-    final modeName = widget.mode == GameMode.vsAI ? 'vs AI Bot' : '2 Players';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E17),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0B0E17),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              modeName,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            if (widget.mode == GameMode.vsAI) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _gameState.aiDifficulty.color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: _gameState.aiDifficulty.color.withOpacity(0.5),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  _gameState.aiDifficulty.label,
-                  style: TextStyle(
-                    color: _gameState.aiDifficulty.color,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history_rounded, color: Color(0xFFFFD700)),
-            tooltip: 'Game History',
-            onPressed: () {
-              HistorySheetWidget.show(context, _gameState);
-            },
-          ),
-        ],
-      ),
+      backgroundColor: const Color(0xFF050505),
       body: Stack(
         children: [
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: Column(
                 children: [
-                  // 1. Status Banner
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF151928),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: statusColor.withOpacity(0.3),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: statusColor.withOpacity(0.12),
-                          blurRadius: 16,
-                          spreadRadius: 1,
+                  _buildCustomTopBar(),
+                  const SizedBox(height: 32),
+
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0.0, 0.5), 
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Row(
+                      key: ValueKey<String>(statusText),
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_isAIThinking && _gameState.result == GameResult.ongoing)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: SizedBox(
+                              width: 12, 
+                              height: 12, 
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2, 
+                                color: statusColor,
+                              ),
+                            ),
+                          ),
+                        Text(
+                          statusText,
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            color: statusColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2.0,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: Text(
-                        statusText,
-                        key: ValueKey<String>(statusText),
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
                   ),
-                  const Spacer(),
 
-                  // 2. Board Widget
+                  const Spacer(),
+                  
                   ListenableBuilder(
                     listenable: _gameState,
                     builder: (context, _) {
@@ -246,7 +208,6 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                   const Spacer(),
 
-                  // 3. ScoreBoard
                   ListenableBuilder(
                     listenable: _gameState,
                     builder: (context, _) {
@@ -258,60 +219,174 @@ class _GameScreenState extends State<GameScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-                  // 4. Action Buttons
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            side: BorderSide(color: Colors.white.withOpacity(0.2)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                        child: TactileButton(
+                          onTap: _resetGame,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.03),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white.withOpacity(0.1)),
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: const Color(0xFF151928),
+                            padding: const EdgeInsets.all(2),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0A0C10),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.refresh_rounded, size: 16, color: Colors.white.withOpacity(0.7)),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'RESET BOARD',
+                                    style: TextStyle(
+                                      fontFamily: 'monospace',
+                                      color: Colors.white.withOpacity(0.7),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          onPressed: _resetGame,
-                          icon: const Icon(Icons.refresh_rounded, size: 18),
-                          label: const Text('Reset Round', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
-                        child: FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF00F2FE),
-                            foregroundColor: const Color(0xFF0B0E17),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                        child: TactileButton(
+                          onTap: _newGame,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF00F2FE).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFF00F2FE).withOpacity(0.3)),
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.all(2),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF00F2FE).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.play_arrow_rounded, size: 18, color: Color(0xFF00F2FE)),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'NEW MATCH',
+                                    style: TextStyle(
+                                      fontFamily: 'monospace',
+                                      color: Color(0xFF00F2FE),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          onPressed: _newGame,
-                          icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                          label: const Text('New Game', style: TextStyle(fontWeight: FontWeight.w900)),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // 5. Signature Footer
+                  const SizedBox(height: 24),
+                  
                   const HeartFooterWidget(),
                 ],
               ),
             ),
           ),
-
-          // Confetti explosion layer on victory
+          
           Positioned.fill(
             child: ConfettiWidget(animate: _showConfetti),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCustomTopBar() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            TactileButton(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.03),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                ),
+                child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70, size: 16),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.mode == GameMode.vsAI ? 'NEURAL NET' : 'LOCAL PVP',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                if (widget.mode == GameMode.vsAI)
+                  Text(
+                    'THREAT: ${_gameState.aiDifficulty.label.toUpperCase()}',
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      color: _gameState.aiDifficulty.color,
+                      fontSize: 9,
+                      letterSpacing: 1.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                else
+                  const Text(
+                    'TWO-PLAYER DIRECT',
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      color: Color(0xFF8E9AAF),
+                      fontSize: 9,
+                      letterSpacing: 1.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+        TactileButton(
+          onTap: () => HistorySheetWidget.show(context, _gameState),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.03),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+            ),
+            child: const Icon(Icons.history_rounded, color: Colors.white70, size: 18),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,10 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/game_state.dart';
 
 class CellWidget extends StatefulWidget {
   final Player player;
   final bool isWinningCell;
-  final VoidCallback onTap;
+  final void Function() onTap;
   final bool enabled;
   final int index;
 
@@ -25,17 +26,29 @@ class _CellWidgetState extends State<CellWidget>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
+  late final Animation<double> _opacityAnimation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 450),
+      duration: const Duration(milliseconds: 300),
     );
-    _scaleAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.elasticOut,
+    
+    // Scale from 0.6 instead of 0.0 for physical realism
+    _scaleAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutBack,
+      ),
+    );
+    
+    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOut,
+      ),
     );
 
     if (widget.player != Player.none) {
@@ -66,42 +79,65 @@ class _CellWidgetState extends State<CellWidget>
 
     final Border border = Border(
       right: (widget.index % 3 != 2)
-          ? BorderSide(color: Colors.white.withOpacity(0.08), width: 1.5)
+          ? BorderSide(color: Colors.white.withOpacity(0.04), width: 1.5)
           : BorderSide.none,
       bottom: (widget.index < 6)
-          ? BorderSide(color: Colors.white.withOpacity(0.08), width: 1.5)
+          ? BorderSide(color: Colors.white.withOpacity(0.04), width: 1.5)
           : BorderSide.none,
     );
 
-    final Color backgroundColor = widget.isWinningCell
-        ? (widget.player == Player.x
-            ? const Color(0xFF00F2FE).withOpacity(0.22)
-            : const Color(0xFFFF007A).withOpacity(0.22))
-        : const Color(0xFF151928);
+    final Color highlightColor = widget.player == Player.x
+        ? const Color(0xFF00F2FE)
+        : const Color(0xFFFF007A);
 
     return GestureDetector(
       onTap: canTap ? widget.onTap : null,
       behavior: HitTestBehavior.opaque,
       child: Container(
         decoration: BoxDecoration(
-          color: backgroundColor,
+          color: widget.isWinningCell
+              ? highlightColor.withOpacity(0.1)
+              : Colors.transparent,
           border: border,
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: canTap ? widget.onTap : null,
-            splashColor: const Color(0xFF00F2FE).withOpacity(0.15),
-            highlightColor: const Color(0xFFFF007A).withOpacity(0.1),
-            child: Center(
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: SizedBox.expand(
-                  child: _buildSymbol(),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            if (widget.isWinningCell)
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                  child: Container(
+                    color: Colors.transparent,
+                  ),
+                ),
+              ),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: canTap ? widget.onTap : null,
+                splashColor: const Color(0xFF00F2FE).withOpacity(0.1),
+                highlightColor: const Color(0xFFFF007A).withOpacity(0.05),
+                child: Center(
+                  child: AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _scaleAnimation.value,
+                        child: Opacity(
+                          opacity: _opacityAnimation.value,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: SizedBox.expand(
+                      child: _buildSymbol(),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -129,15 +165,15 @@ class _XNeonPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const color = Color(0xFF00F2FE);
-    final strokeWidth = size.width * 0.09;
-    final padding = size.width * 0.22;
+    final strokeWidth = size.width * 0.08;
+    final padding = size.width * 0.25;
 
     final glowPaint = Paint()
-      ..color = color.withOpacity(0.5)
-      ..strokeWidth = strokeWidth * 1.6
+      ..color = color.withOpacity(0.3)
+      ..strokeWidth = strokeWidth * 2.0
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
 
     final mainPaint = Paint()
       ..color = color
@@ -150,11 +186,8 @@ class _XNeonPainter extends CustomPainter {
     final p3 = Offset(size.width - padding, padding);
     final p4 = Offset(padding, size.height - padding);
 
-    // Draw glow pass
     canvas.drawLine(p1, p2, glowPaint);
     canvas.drawLine(p3, p4, glowPaint);
-
-    // Draw crisp neon stroke pass
     canvas.drawLine(p1, p2, mainPaint);
     canvas.drawLine(p3, p4, mainPaint);
   }
@@ -169,16 +202,16 @@ class _ONeonPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const color = Color(0xFFFF007A);
-    final strokeWidth = size.width * 0.09;
+    final strokeWidth = size.width * 0.08;
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width * 0.28;
+    final radius = size.width * 0.25;
 
     final glowPaint = Paint()
-      ..color = color.withOpacity(0.5)
-      ..strokeWidth = strokeWidth * 1.6
+      ..color = color.withOpacity(0.3)
+      ..strokeWidth = strokeWidth * 2.0
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
 
     final mainPaint = Paint()
       ..color = color
@@ -186,10 +219,7 @@ class _ONeonPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    // Draw glow pass
     canvas.drawCircle(center, radius, glowPaint);
-
-    // Draw crisp neon stroke pass
     canvas.drawCircle(center, radius, mainPaint);
   }
 
