@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.hello_app"
+    namespace = "com.akashiverse.cybertactoe"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -19,16 +19,25 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.hello_app"
+        applicationId = "com.akashiverse.cybertactoe"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("upload-keystore.p12")
+            storePassword = "akashiverse"
+            keyAlias = "upload"
+            keyPassword = "akashiverse"
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
